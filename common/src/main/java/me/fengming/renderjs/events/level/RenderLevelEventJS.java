@@ -9,9 +9,9 @@ import net.minecraft.client.renderer.culling.Frustum;
 import org.joml.Matrix4f;
 
 @Info("""
-	Invoked on rendering a block.
+	Invoked on rendering the world.
 	""")
-public class RenderBlockEnitityEventJS extends RenderEventJS {
+public class RenderLevelEventJS extends RenderEventJS {
 
     private final LevelRenderer levelRenderer;
     private final PoseStack poseStack;
@@ -21,7 +21,7 @@ public class RenderBlockEnitityEventJS extends RenderEventJS {
     private final Camera camera;
     private final Frustum frustum;
 
-    protected RenderBlockEnitityEventJS(LevelRenderer renderer, PoseStack poseStack, Matrix4f matrix4f, int renderTick, float partialTick, Camera camera, Frustum frustum) {
+    protected RenderLevelEventJS(LevelRenderer renderer, PoseStack poseStack, Matrix4f matrix4f, int renderTick, float partialTick, Camera camera, Frustum frustum) {
         this.levelRenderer = renderer;
         this.poseStack = poseStack;
         this.projectionMatrix = matrix4f;
@@ -60,18 +60,18 @@ public class RenderBlockEnitityEventJS extends RenderEventJS {
     }
 
     @Info("""
-	Invoked after rendering a block.
+	Invoked after rendering the world.
 	""")
-    public static class After extends RenderBlockEnitityEventJS {
+    public static class After extends RenderLevelEventJS {
         public After(LevelRenderer renderer, PoseStack poseStack, Matrix4f matrix4f, int renderTick, float partialTick, Camera camera, Frustum frustum) {
             super(renderer, poseStack, matrix4f, renderTick, partialTick, camera, frustum);
         }
     }
 
     @Info("""
-	Invoked before rendering a block.
+	Invoked before rendering the world.
 	""")
-    public static class Before extends RenderBlockEnitityEventJS {
+    public static class Before extends RenderLevelEventJS {
         public Before(LevelRenderer renderer, PoseStack poseStack, Matrix4f matrix4f, int renderTick, float partialTick, Camera camera, Frustum frustum) {
             super(renderer, poseStack, matrix4f, renderTick, partialTick, camera, frustum);
         }

@@ -1,23 +1,24 @@
-package me.fengming.renderjs.events;
+package me.fengming.renderjs.events.level;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import dev.latvian.mods.kubejs.typings.Info;
+import me.fengming.renderjs.events.RenderEventJS;
 import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.RenderType;
 import org.joml.Matrix4f;
 
 @Info("""
-	Invoked before rendering a block.
+	Invoked on level rendering.
 	""")
-public class BeforeRenderBlockEventJS extends RenderEventJS {
+public class LevelRenderEventJS extends RenderEventJS {
 	public LevelRenderer levelRenderer;
 	public Camera camera;
 	public PoseStack poseStack;
 	public Matrix4f matrix4f;
 	public RenderType renderType;
 
-	public BeforeRenderBlockEventJS(LevelRenderer levelRenderer, Camera camera, PoseStack poseStack, Matrix4f matrix4f, RenderType renderType) {
+	public LevelRenderEventJS(LevelRenderer levelRenderer, Camera camera, PoseStack poseStack, Matrix4f matrix4f, RenderType renderType) {
 		this.levelRenderer = levelRenderer;
 		this.camera = camera;
 		this.poseStack = poseStack;
@@ -25,7 +26,6 @@ public class BeforeRenderBlockEventJS extends RenderEventJS {
 		this.renderType = renderType;
 	}
 
-	@Override
 	public Camera getCamera() {
 		return this.camera;
 	}
@@ -35,7 +35,6 @@ public class BeforeRenderBlockEventJS extends RenderEventJS {
 		return this.poseStack;
 	}
 
-	@Override
 	public Matrix4f getMatrix4f() {
 		return this.matrix4f;
 	}
