@@ -13,6 +13,4 @@ public interface RenderJsEvents {
     EventHandler AFTER_RENDER_SOLID_BLOCK = RenderJsEvents.GROUP_LEVEL.client("afterSolidBlockRender", () -> RenderLevelEventJS.After.class);
     EventHandler BEFORE_RENDER_ENTITY = RenderJsEvents.GROUP_ENTITY.client("beforeRender", () -> RenderEntityEventJS.Before.class);
     EventHandler AFTER_RENDER_ENTITY = RenderJsEvents.GROUP_ENTITY.client("afterRender", () -> RenderEntityEventJS.After.class);
-//    EventHandler SPECIAL_SPOUT = RenderJsEvents.GROUP.client("spoutHandler", () -> SpecialSpoutHandlerEvent.class);
-//    EventHandler BOILER_HEATER = RenderJsEvents.GROUP.client("boilerHeatHandler", () -> BoilerHeaterHandlerEvent.class);
 }
