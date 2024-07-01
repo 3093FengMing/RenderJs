@@ -20,7 +20,6 @@ public class RenderJsPlugin extends KubeJSPlugin {
     public void registerBindings(BindingsEvent event) {
         event.add("RenderSystem", RenderSystem.class);
         event.add("Tesselator", Tesselator.class);
-
         event.add("RenderObjectManager", RenderObjectManager.class);
     }
 

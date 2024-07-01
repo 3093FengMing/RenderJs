@@ -9,8 +9,8 @@ import net.minecraft.client.renderer.culling.Frustum;
 import org.joml.Matrix4f;
 
 @Info("""
-	Invoked on rendering the world.
-	""")
+        Invoked on rendering the world.
+        """)
 public class RenderLevelEventJS extends RenderEventJS {
 
     private final LevelRenderer levelRenderer;
@@ -59,9 +59,17 @@ public class RenderLevelEventJS extends RenderEventJS {
         return this.frustum;
     }
 
+    public void renderInWorld(String id) {
+        super.renderInWorld(id, this.camera);
+    }
+
+    public void renderInWorld(String id, float x, float y, float z) {
+        super.renderInWorld(id, this.camera, x, y, z);
+    }
+
     @Info("""
-	Invoked after rendering the world.
-	""")
+            Invoked after rendering the world.
+            """)
     public static class After extends RenderLevelEventJS {
         public After(LevelRenderer renderer, PoseStack poseStack, Matrix4f matrix4f, int renderTick, float partialTick, Camera camera, Frustum frustum) {
             super(renderer, poseStack, matrix4f, renderTick, partialTick, camera, frustum);
@@ -69,8 +77,8 @@ public class RenderLevelEventJS extends RenderEventJS {
     }
 
     @Info("""
-	Invoked before rendering the world.
-	""")
+            Invoked before rendering the world.
+            """)
     public static class Before extends RenderLevelEventJS {
         public Before(LevelRenderer renderer, PoseStack poseStack, Matrix4f matrix4f, int renderTick, float partialTick, Camera camera, Frustum frustum) {
             super(renderer, poseStack, matrix4f, renderTick, partialTick, camera, frustum);

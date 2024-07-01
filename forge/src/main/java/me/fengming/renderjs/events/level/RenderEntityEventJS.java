@@ -8,8 +8,8 @@ import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.world.entity.LivingEntity;
 
 @Info("""
-	Invoked on rendering a living entity.
-	""")
+        Invoked on rendering a living entity.
+        """)
 public class RenderEntityEventJS extends RenderEventJS {
     public PoseStack poseStack;
     public MultiBufferSource multiBufferSource;
@@ -52,8 +52,8 @@ public class RenderEntityEventJS extends RenderEventJS {
     }
 
     @Info("""
-	Invoked after rendering a entity.
-	""")
+            Invoked after rendering a entity.
+            """)
     public static class After extends RenderEntityEventJS {
         public After(LivingEntity entity, LivingEntityRenderer<?, ?> renderer, float partialTick, PoseStack poseStack, MultiBufferSource multiBufferSource, int packedLight) {
             super(entity, renderer, partialTick, poseStack, multiBufferSource, packedLight);
@@ -61,8 +61,8 @@ public class RenderEntityEventJS extends RenderEventJS {
     }
 
     @Info("""
-	Invoked before rendering a entity.
-	""")
+            Invoked before rendering a entity.
+            """)
     public static class Before extends RenderEntityEventJS {
         public Before(LivingEntity entity, LivingEntityRenderer<?, ?> renderer, float partialTick, PoseStack poseStack, MultiBufferSource multiBufferSource, int packedLight) {
             super(entity, renderer, partialTick, poseStack, multiBufferSource, packedLight);
