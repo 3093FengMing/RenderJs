@@ -4,13 +4,19 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.math.Transformation;
 import dev.latvian.mods.kubejs.typings.Info;
 import dev.latvian.mods.kubejs.typings.Param;
 import dev.latvian.mods.rhino.util.RemapPrefixForJS;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtOps;
+import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.Display;
+import org.joml.Quaternionf;
 
 @RemapPrefixForJS("rjs$")
 public abstract class RenderObject {
@@ -30,8 +36,11 @@ public abstract class RenderObject {
     protected boolean enableBlend = true;
     protected boolean enableDepthTest = true;
     protected boolean enableCull = false;
-    protected boolean enableFacingPlayer = false;
+    protected Display.BillboardConstraints billboard = Display.BillboardConstraints.FIXED;
+    protected Transformation transformation;
 
+    private float[] innerOffsets = new float[9];
+    private int innerOffsetsLength = 0;
     private float[] offsets = new float[300];
     private int offsetsLength = 0;
 
@@ -65,11 +74,18 @@ public abstract class RenderObject {
         this.vertices = vertices;
     }
 
+    public void setTransformation(Transformation transformation) {
+        this.transformation = transformation;
+    }
+
     @Info("""
             Transform vertex matrix.
             """)
-    public void rjs$transform(float[] transformation) {
-        // TODO
+    public void rjs$setTransformation(Tag tag) {
+        Transformation.EXTENDED_CODEC
+                .decode(NbtOps.INSTANCE, tag)
+                .result()
+                .ifPresent(pair -> this.transformation = pair.getFirst());
     }
 
     @Info("""
@@ -89,7 +105,7 @@ public abstract class RenderObject {
                     @Param(name = "z", value = "Offset in the z-direction.")
             }
     )
-    public void rjs$offset(int i, float x, float y, float z) {
+    public void rjs$addOffset(int i, float x, float y, float z) {
         i *= 3;
         offsets[i] = x;
         offsets[i + 1] = y;
@@ -97,11 +113,11 @@ public abstract class RenderObject {
         offsetsLength = i + 3;
     }
 
-    @Info("""
-            Offset vertices by given values.
-            """)
-    public void rjs$offset(float[] offset) {
-        offsets = offset;
+    public void addInnerOffsets(float x, float y, float z) {
+        innerOffsets[innerOffsetsLength] = x;
+        innerOffsets[innerOffsetsLength + 1] = y;
+        innerOffsets[innerOffsetsLength + 2] = z;
+        innerOffsetsLength += 3;
     }
 
     @Info("""
@@ -144,9 +160,19 @@ public abstract class RenderObject {
         for (int i = 0; i < offsetsLength; i += 3) {
             poseStack.translate(offsets[i], offsets[i + 1], offsets[i + 2]);
         }
-        if (enableFacingPlayer) {
-            poseStack.mulPose(Minecraft.getInstance().getEntityRenderDispatcher().cameraOrientation());
+        for (int i = 0; i < innerOffsetsLength; i += 3) {
+            poseStack.translate(innerOffsets[i], innerOffsets[i + 1], innerOffsets[i + 2]);
         }
+
+        switch (billboard) {
+            case HORIZONTAL -> poseStack.mulPose(new Quaternionf().rotationYXZ(0.0F, -0.017453292F * camera.getXRot(), 0.0F));
+            case VERTICAL -> poseStack.mulPose(new Quaternionf().rotationYXZ((float)Math.PI - ((float)Math.PI / 180F) * camera.getYRot(), (float)Math.PI / 180F, 0.0F));
+            case CENTER -> poseStack.mulPose(new Quaternionf().rotationYXZ((float)Math.PI - ((float)Math.PI / 180F) * camera.getYRot(), -0.017453292F * camera.getXRot(), 0.0F));
+            default -> {}
+        }
+
+        poseStack.mulPoseMatrix(transformation.getMatrix());
+        poseStack.last().normal().rotate(transformation.getLeftRotation()).rotate(transformation.getRightRotation());
     }
 
     public enum ObjectType {

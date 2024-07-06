@@ -13,7 +13,12 @@ import net.minecraft.nbt.CompoundTag;
         Base render event.
         """)
 public abstract class RenderEventJS extends EventJS {
+
     public abstract PoseStack getPoseStack();
+
+    public Camera getMainCamera() {
+        return RenderObject.camera;
+    }
 
     @Info(value = """
             Render a object by id.
@@ -47,13 +52,13 @@ public abstract class RenderEventJS extends EventJS {
             """,
             params = {
                     @Param(name = "id", value = "The identity of the object to be rendered. Be sure that the object has been registered."),
-                    @Param(name = "offset", value = "Given the amount to be offset, in the order xyz. It use the offset index 0.")
+                    @Param(name = "offset", value = "Given the amount to be offset, in the order xyz.")
             }
     )
     public void renderWithOffset(String id, float[] offset) {
         RenderObject object = RenderObjectManager.rjs$get(id);
         object.rjs$setPoseStack(this.getPoseStack());
-        object.rjs$offset(0, offset[0], offset[1], offset[2]);
+        object.addInnerOffsets(offset[0], offset[1], offset[2]);
         object.rjs$render();
     }
 
@@ -67,7 +72,7 @@ public abstract class RenderEventJS extends EventJS {
                     @Param(name = "value", value = "The value of the vertex to be modified.")
             }
     )
-    public void renderWithModifier(String id, int index, float value) {
+    public void renderWithModification(String id, int index, float value) {
         RenderObject object = RenderObjectManager.rjs$get(id);
         object.rjs$setPoseStack(this.getPoseStack());
         object.rjs$modifyVertices(index, value);
@@ -84,10 +89,10 @@ public abstract class RenderEventJS extends EventJS {
                     @Param(name = "value", value = "The value of the vertex to be modified.")
             }
     )
-    public void renderWithTransform(String id, float[] transform) {
+    public void renderWithTransform(String id, CompoundTag transformation) {
         RenderObject object = RenderObjectManager.rjs$get(id);
         object.rjs$setPoseStack(this.getPoseStack());
-        object.rjs$transform(transform);
+        object.rjs$setTransformation(transformation);
         object.rjs$render();
     }
 
@@ -112,15 +117,24 @@ public abstract class RenderEventJS extends EventJS {
             Actually it is converting vertices to world position.
             """,
             params = {
+                    @Param(name = "id", value = "The identity of the object to be rendered. Be sure that the object has been registered.")
+            }
+    )
+    public void renderInWorld(String id) {
+        renderInWorldCameraXyz(id, getMainCamera(), 0.0F, 0.0F, 0.0F);
+    }
+
+    @Info(value = """
+            Renders the given object in world.
+            Actually it is converting vertices to world position.
+            """,
+            params = {
                     @Param(name = "id", value = "The identity of the object to be rendered. Be sure that the object has been registered."),
                     @Param(name = "camera", value = "Convert world position based on this camera.")
             }
     )
-    public void renderInWorld(String id, Camera camera) {
-        RenderObject object = RenderObjectManager.rjs$get(id);
-        object.rjs$setPoseStack(this.getPoseStack());
-        object.rjs$offset(0, (float) -camera.getPosition().x, (float) -camera.getPosition().y, (float) -camera.getPosition().z);
-        object.rjs$render();
+    public void renderInWorldCamera(String id, Camera camera) {
+        this.renderInWorldCameraXyz(id, camera, 0.0F, 0.0F, 0.0F);
     }
 
     @Info(value = """
@@ -135,11 +149,10 @@ public abstract class RenderEventJS extends EventJS {
                     @Param(name = "z", value = "Based on the offset in the z-direction of the origin.")
             }
     )
-    public void renderInWorld(String id, Camera camera, float x, float y, float z) {
+    public void renderInWorldCameraXyz(String id, Camera camera, float x, float y, float z) {
         RenderObject object = RenderObjectManager.rjs$get(id);
         object.rjs$setPoseStack(this.getPoseStack());
-        object.rjs$offset(0, (float) -camera.getPosition().x, (float) -camera.getPosition().y, (float) -camera.getPosition().z);
-        object.rjs$offset(1, x, y, z);
+        object.addInnerOffsets((float) (x - camera.getPosition().x), (float) (y - camera.getPosition().y), (float) (z - camera.getPosition().z));
         object.rjs$render();
     }
 

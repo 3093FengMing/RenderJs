@@ -1,11 +1,14 @@
 package me.fengming.renderjs.core;
 
 import com.google.common.collect.Maps;
+import com.mojang.math.Transformation;
 import dev.latvian.mods.kubejs.util.ConsoleJS;
 import dev.latvian.mods.rhino.util.RemapPrefixForJS;
 import me.fengming.renderjs.core.objects.*;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtOps;
+import net.minecraft.world.entity.Display;
 import net.minecraft.world.item.ItemDisplayContext;
 
 import java.util.Arrays;
@@ -79,8 +82,11 @@ public class RenderObjectManager {
             if (options.contains("cull")) {
                 renderObject.enableCull = options.getBoolean("cull");
             }
-            if (options.contains("facing_player")) {
-                renderObject.enableFacingPlayer = options.getBoolean("facing_player");
+            if (options.contains("billboard")) {
+                renderObject.billboard = Display.BillboardConstraints.valueOf(options.getString("billboard").toUpperCase());
+            }
+            if (options.contains("transformation")) {
+                renderObject.rjs$setTransformation(object.get("transformation"));
             }
         }
 

@@ -12,7 +12,6 @@ import org.joml.Matrix4f;
         Invoked on rendering the world.
         """)
 public class RenderLevelEventJS extends RenderEventJS {
-
     private final LevelRenderer levelRenderer;
     private final PoseStack poseStack;
     private final Matrix4f projectionMatrix;
@@ -59,12 +58,8 @@ public class RenderLevelEventJS extends RenderEventJS {
         return this.frustum;
     }
 
-    public void renderInWorld(String id) {
-        super.renderInWorld(id, this.camera);
-    }
-
-    public void renderInWorld(String id, float x, float y, float z) {
-        super.renderInWorld(id, this.camera, x, y, z);
+    public void renderInWorldXyz(String id, float x, float y, float z) {
+        super.renderInWorldCameraXyz(id, this.camera, x, y, z);
     }
 
     @Info("""
