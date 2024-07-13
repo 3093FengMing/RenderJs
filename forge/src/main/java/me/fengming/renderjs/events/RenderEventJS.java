@@ -41,7 +41,7 @@ public abstract class RenderEventJS extends EventJS {
             }
     )
     public void renderByObject(CompoundTag object) {
-        RenderObject renderObject = RenderObjectManager.createObjectByTag(object);
+        RenderObject renderObject = RenderObject.loadFromNbt(object);
         renderObject.rjs$setPoseStack(this.getPoseStack());
         renderObject.rjs$render();
     }
@@ -58,7 +58,7 @@ public abstract class RenderEventJS extends EventJS {
     public void renderWithOffset(String id, float[] offset) {
         RenderObject object = RenderObjectManager.rjs$get(id);
         object.rjs$setPoseStack(this.getPoseStack());
-        object.addInnerOffsets(offset[0], offset[1], offset[2]);
+        object.addInnerOffsets(0, offset[0], offset[1], offset[2]);
         object.rjs$render();
     }
 
@@ -121,7 +121,7 @@ public abstract class RenderEventJS extends EventJS {
             }
     )
     public void renderInWorld(String id) {
-        renderInWorldCameraXyz(id, getMainCamera(), 0.0F, 0.0F, 0.0F);
+        renderInWorldCameraXYZ(id, getMainCamera(), 0.0F, 0.0F, 0.0F);
     }
 
     @Info(value = """
@@ -134,7 +134,7 @@ public abstract class RenderEventJS extends EventJS {
             }
     )
     public void renderInWorldCamera(String id, Camera camera) {
-        this.renderInWorldCameraXyz(id, camera, 0.0F, 0.0F, 0.0F);
+        this.renderInWorldCameraXYZ(id, camera, 0.0F, 0.0F, 0.0F);
     }
 
     @Info(value = """
@@ -149,10 +149,10 @@ public abstract class RenderEventJS extends EventJS {
                     @Param(name = "z", value = "Based on the offset in the z-direction of the origin.")
             }
     )
-    public void renderInWorldCameraXyz(String id, Camera camera, float x, float y, float z) {
+    public void renderInWorldCameraXYZ(String id, Camera camera, float x, float y, float z) {
         RenderObject object = RenderObjectManager.rjs$get(id);
         object.rjs$setPoseStack(this.getPoseStack());
-        object.addInnerOffsets((float) (x - camera.getPosition().x), (float) (y - camera.getPosition().y), (float) (z - camera.getPosition().z));
+        object.addInnerOffsets(0, (float) (x - camera.getPosition().x), (float) (y - camera.getPosition().y), (float) (z - camera.getPosition().z));
         object.rjs$render();
     }
 

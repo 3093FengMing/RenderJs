@@ -1,8 +1,11 @@
 package me.fengming.renderjs.core.objects;
 
+import dev.latvian.mods.kubejs.util.ConsoleJS;
 import dev.latvian.mods.rhino.util.RemapPrefixForJS;
 import me.fengming.renderjs.core.RenderObject;
+import me.fengming.renderjs.core.Utils;
 import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 
@@ -13,8 +16,8 @@ public class ItemsDisplay extends RenderObject {
     protected boolean leftHand = false;
     protected int light = 15728880;
 
-    public ItemsDisplay(float[] vertices, float r, float g, float b, float a, String texLoc, ObjectType type) {
-        super(vertices, r, g, b, a, texLoc, type);
+    public ItemsDisplay(float[] vertices, ObjectType type) {
+        super(vertices, type);
     }
 
     public void rjs$setItem(ItemStack item) {
@@ -34,13 +37,29 @@ public class ItemsDisplay extends RenderObject {
     }
 
     @Override
-    public void rjs$render() {
-        prepare();
+    public void loadInner(CompoundTag object) {
+        if (object.contains("item")) {
+            this.rjs$setItem(Utils.parseItem(object.getString("item"), object.getInt("count")));
+        } else {
+            ConsoleJS.CLIENT.error("Missing a necessary key: item");
+            broken = true;
+        }
+        if (object.contains("context")) {
+            this.rjs$setItemDisplayContext(ItemDisplayContext.valueOf(object.getString("context").toUpperCase()));
+        }
+        if (object.contains("left_hand")) {
+            this.rjs$setLeftHand(object.getBoolean("left_hand"));
+        }
+        if (object.contains("light")) {
+            this.rjs$setLight(object.getInt("light"));
+        }
+    }
 
+    @Override
+    public void renderInner() {
         for (int i = 0; i < vertices.length; i += 3) {
             poseStack.translate(vertices[i], vertices[i + 1], vertices[i + 2]);
-            mc.getItemRenderer().renderStatic(mc.player, item, context, leftHand, poseStack, mc.renderBuffers().bufferSource(), mc.level, light, OverlayTexture.NO_OVERLAY, i);
+            mc.getItemRenderer().renderStatic(item, context, light, OverlayTexture.NO_OVERLAY, poseStack, mc.renderBuffers().bufferSource(), mc.level, i);
         }
-        poseStack.popPose();
     }
 }

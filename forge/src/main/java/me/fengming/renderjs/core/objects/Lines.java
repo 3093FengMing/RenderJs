@@ -7,14 +7,15 @@ import com.mojang.blaze3d.vertex.Tesselator;
 import dev.latvian.mods.rhino.util.RemapPrefixForJS;
 import me.fengming.renderjs.core.RenderObject;
 import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.nbt.CompoundTag;
 import org.joml.Matrix4f;
 
 @RemapPrefixForJS("rjs$")
-public class Lines extends RenderObject {
+public class Lines extends Draw {
     protected float lineWidth;
 
-    public Lines(float[] vertices, float r, float g, float b, float a, String texLoc, ObjectType type) {
-        super(vertices, r, g, b, a, texLoc, type);
+    public Lines(float[] vertices, ObjectType type) {
+        super(vertices, type);
     }
 
     public void rjs$setLineWidth(float lineWidth) {
@@ -22,9 +23,14 @@ public class Lines extends RenderObject {
     }
 
     @Override
-    public void rjs$render() {
-        prepare();
+    public void loadInner(CompoundTag object) {
+        if (object.contains("line_width")) {
+            this.rjs$setLineWidth(object.getFloat("line_width"));
+        }
+    }
 
+    @Override
+    public void renderInner() {
         Matrix4f matrix4f = poseStack.last().pose();
         Tesselator tesselator = RenderSystem.renderThreadTesselator();
         BufferBuilder builder = tesselator.getBuilder();
@@ -58,12 +64,5 @@ public class Lines extends RenderObject {
         }
 
         tesselator.end();
-        poseStack.popPose();
-    }
-
-    @Override
-    public void prepare() {
-        super.prepare();
-        RenderSystem.setShader(GameRenderer::getRendertypeLinesShader);
     }
 }

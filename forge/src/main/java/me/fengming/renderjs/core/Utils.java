@@ -2,6 +2,7 @@ package me.fengming.renderjs.core;
 
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import me.fengming.renderjs.core.render.CustomRenderType;
 import net.minecraft.client.multiplayer.ClientRegistryLayer;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.commands.arguments.blocks.BlockStateParser;
@@ -21,14 +22,15 @@ public class Utils {
     static {
         try {
             for (Field field : RenderType.class.getFields()) {
-                if (field.getType().getName().equals("net.minecraft.client.renderer.RenderType")) {
+                if (field.getType().getName().equals(RenderType.class.getName())) {
                     renderTypeMap.put(field.getName().toLowerCase(), (RenderType) field.get(null));
+                    // Some require parameters, but they have not been validated here
                 }
             }
         } catch (Exception e) {
             throw new IllegalStateException("Error getting render type: ", e);
         }
-        // renderTypeMap.put("block_layer_top", CustomRenderType.BLOCK_LAYER_TOP);
+        renderTypeMap.put("block_layer_top", CustomRenderType.BLOCK_LAYER_TOP);
     }
 
     public static BlockState parseBlock(String s, boolean allowNbt) {
@@ -47,7 +49,7 @@ public class Utils {
             item.setTag(result.nbt());
             return item;
         } catch (CommandSyntaxException e) {
-            throw new IllegalArgumentException("Error parsing a block: '" + s + "': ", e);
+            throw new IllegalArgumentException("Error parsing a item: '" + s + "': ", e);
         }
     }
 

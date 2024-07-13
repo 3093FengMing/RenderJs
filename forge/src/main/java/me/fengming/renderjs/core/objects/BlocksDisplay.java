@@ -1,10 +1,13 @@
 package me.fengming.renderjs.core.objects;
 
+import dev.latvian.mods.kubejs.util.ConsoleJS;
 import dev.latvian.mods.rhino.util.RemapPrefixForJS;
 import me.fengming.renderjs.core.RenderObject;
+import me.fengming.renderjs.core.Utils;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.client.model.data.ModelData;
 
@@ -15,8 +18,8 @@ public class BlocksDisplay extends RenderObject {
     protected int blockLight = 15;
     protected RenderType renderType = null;
 
-    public BlocksDisplay(float[] vertices, float r, float g, float b, float a, String texLoc, ObjectType type) {
-        super(vertices, r, g, b, a, texLoc, type);
+    public BlocksDisplay(float[] vertices, ObjectType type) {
+        super(vertices, type);
     }
 
     public void rjs$setBlockState(BlockState blockState) {
@@ -36,13 +39,28 @@ public class BlocksDisplay extends RenderObject {
     }
 
     @Override
-    public void rjs$render() {
-        prepare();
+    public void loadInner(CompoundTag object) {
+        if (object.contains("block")) {
+            this.rjs$setBlockState(Utils.parseBlock(object.getString("block"), true));
+        } else {
+            ConsoleJS.CLIENT.error("Missing a necessary key: block");
+        }
+        if (object.contains("world_light")) {
+            this.rjs$setWorldLight(object.getInt("world_light"));
+        }
+        if (object.contains("block_light")) {
+            this.rjs$setBlockLight(object.getInt("block_light"));
+        }
+        if (object.contains("render_type")) {
+            this.rjs$setRenderType(Utils.getRenderTypeById(object.getString("render_type")));
+        }
+    }
 
+    @Override
+    public void renderInner() {
         for (int i = 0; i < vertices.length; i += 3) {
             poseStack.translate(vertices[i], vertices[i + 1], vertices[i + 2]);
             mc.getBlockRenderer().renderSingleBlock(blockState, poseStack, mc.renderBuffers().bufferSource(), LightTexture.pack(worldLight, blockLight), OverlayTexture.NO_OVERLAY, ModelData.EMPTY, renderType);
         }
-        poseStack.popPose();
     }
 }

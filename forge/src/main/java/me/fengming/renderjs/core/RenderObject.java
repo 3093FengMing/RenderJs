@@ -1,66 +1,113 @@
 package me.fengming.renderjs.core;
 
-import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.math.Transformation;
 import dev.latvian.mods.kubejs.typings.Info;
 import dev.latvian.mods.kubejs.typings.Param;
+import dev.latvian.mods.kubejs.util.ConsoleJS;
 import dev.latvian.mods.rhino.util.RemapPrefixForJS;
+import me.fengming.renderjs.core.objects.*;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Display;
 import org.joml.Quaternionf;
+
+import java.util.Arrays;
 
 @RemapPrefixForJS("rjs$")
 public abstract class RenderObject {
     public static Minecraft mc = Minecraft.getInstance();
     public static Camera camera = mc.gameRenderer.getMainCamera();
 
+    protected boolean broken;
+
     protected PoseStack poseStack = null;
     protected ObjectType type;
     protected float[] vertices;
-    protected float r = 0.0F;
-    protected float g = 0.0F;
-    protected float b = 0.0F;
-    protected float a = 1.0F;
-    protected ResourceLocation textureLocation = null;
-    protected boolean texture = false;
-    protected boolean verticesColor = false;
     protected boolean enableBlend = true;
     protected boolean enableDepthTest = true;
     protected boolean enableCull = false;
     protected Display.BillboardConstraints billboard = Display.BillboardConstraints.FIXED;
-    protected Transformation transformation;
+    protected Transformation transformation = new Transformation(null);
 
-    private float[] innerOffsets = new float[9];
+    private final float[] innerOffsets = new float[300];
     private int innerOffsetsLength = 0;
-    private float[] offsets = new float[300];
+    private final float[] offsets = new float[300];
     private int offsetsLength = 0;
 
-    public RenderObject(float[] vertices, float r, float g, float b, float a, String texLoc, ObjectType type) {
+    public RenderObject(float[] vertices, ObjectType type) {
         this.vertices = vertices;
-        this.a = a;
-        if (r == -1.0F || g == -1.0F || b == -1.0F) {
-            this.verticesColor = true;
-        } else {
-            this.r = r;
-            this.g = g;
-            this.b = b;
-        }
-        if (texLoc != null) {
-            this.textureLocation = new ResourceLocation(texLoc);
-            this.texture = true;
-        } else {
-            this.textureLocation = null;
-        }
         this.type = type;
+    }
+
+    public abstract void loadInner(CompoundTag object);
+
+    public void load(CompoundTag object) {
+        if (object.contains("options")) {
+            CompoundTag options = object.getCompound("options");
+            if (options.contains("blend")) {
+                this.enableBlend = options.getBoolean("blend");
+            }
+            if (options.contains("depth_test")) {
+                this.enableDepthTest = options.getBoolean("depth_test");
+            }
+            if (options.contains("cull")) {
+                this.enableCull = options.getBoolean("cull");
+            }
+            if (options.contains("billboard")) {
+                this.billboard = Display.BillboardConstraints.valueOf(options.getString("billboard").toUpperCase());
+            }
+            if (options.contains("transformation")) {
+                this.rjs$setTransformation(options.get("transformation"));
+            }
+        }
+
+        loadInner(object);
+    }
+
+    public static RenderObject loadFromNbt(CompoundTag object) {
+        if (!object.contains("type")) {
+            ConsoleJS.CLIENT.error("Missing a necessary key: type");
+            return null;
+        }
+
+        String type = object.getString("type");
+        if (!Arrays.stream(RenderObject.ObjectType.values()).map(Enum::toString).toList().contains(type.toUpperCase())) {
+            ConsoleJS.CLIENT.error("Type " + type + " does not exist");
+            return null;
+        }
+        ObjectType objectType = ObjectType.valueOf(type.toUpperCase());
+
+        float[] vertices;
+        if (object.contains("vertices")) {
+            ListTag verticesList = object.getList("vertices", 6);
+            vertices = new float[verticesList.size()];
+            for (int i = 0; i < verticesList.size(); i++) {
+                vertices[i] = (float) verticesList.getDouble(i);
+            }
+        } else {
+            ConsoleJS.CLIENT.error("Missing a necessary key: vertices");
+            return null;
+        }
+
+        RenderObject renderObject = null;
+        switch (objectType) {
+            case LINES, LINE_STRIP -> renderObject = new Lines(vertices, objectType);
+            case TRIANGLES, TRIANGLE_STRIP, TRIANGLE_FAN -> renderObject = new Triangles(vertices, objectType);
+            case QUADS, RECTANGLES -> renderObject = new Quads(vertices, objectType);
+            case BLOCKS -> renderObject = new BlocksDisplay(vertices, objectType);
+            case ITEMS -> renderObject = new ItemsDisplay(vertices, objectType);
+            case ICONS -> renderObject = new IconsDisplay(vertices, objectType);
+        }
+        renderObject.load(object);
+
+        return renderObject;
     }
 
     public void rjs$setPoseStack(PoseStack poseStack) {
@@ -85,7 +132,7 @@ public abstract class RenderObject {
         Transformation.EXTENDED_CODEC
                 .decode(NbtOps.INSTANCE, tag)
                 .result()
-                .ifPresent(pair -> this.transformation = pair.getFirst());
+                .ifPresent(pair -> setTransformation(pair.getFirst()));
     }
 
     @Info("""
@@ -113,11 +160,12 @@ public abstract class RenderObject {
         offsetsLength = i + 3;
     }
 
-    public void addInnerOffsets(float x, float y, float z) {
-        innerOffsets[innerOffsetsLength] = x;
-        innerOffsets[innerOffsetsLength + 1] = y;
-        innerOffsets[innerOffsetsLength + 2] = z;
-        innerOffsetsLength += 3;
+    public void addInnerOffsets(int i, float x, float y, float z) {
+        i *= 3;
+        innerOffsets[i] = x;
+        innerOffsets[i + 1] = y;
+        innerOffsets[i + 2] = z;
+        innerOffsetsLength = i + 3;
     }
 
     @Info("""
@@ -127,12 +175,14 @@ public abstract class RenderObject {
         return this.type;
     }
 
+    public abstract void renderInner();
+
     @Info("""
             Render this object.
             """)
-    public abstract void rjs$render();
+    public void rjs$render() {
+        if (broken) return;
 
-    public void prepare() {
         if (enableBlend) {
             RenderSystem.enableBlend();
         }
@@ -146,22 +196,14 @@ public abstract class RenderObject {
             RenderSystem.disableCull();
         }
 
-        if (texture) {
-            RenderSystem.setShaderTexture(99, textureLocation);
-            RenderSystem.bindTexture(99);
-            RenderSystem.setShader(GameRenderer::getPositionColorTexShader);
-        } else {
-            RenderSystem.setShader(GameRenderer::getPositionColorShader);
-        }
-
-        RenderSystem.blendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
+        // RenderSystem.blendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
 
         poseStack.pushPose();
-        for (int i = 0; i < offsetsLength; i += 3) {
-            poseStack.translate(offsets[i], offsets[i + 1], offsets[i + 2]);
-        }
         for (int i = 0; i < innerOffsetsLength; i += 3) {
             poseStack.translate(innerOffsets[i], innerOffsets[i + 1], innerOffsets[i + 2]);
+        }
+        for (int i = 0; i < offsetsLength; i += 3) {
+            poseStack.translate(offsets[i], offsets[i + 1], offsets[i + 2]);
         }
 
         switch (billboard) {
@@ -173,6 +215,9 @@ public abstract class RenderObject {
 
         poseStack.mulPoseMatrix(transformation.getMatrix());
         poseStack.last().normal().rotate(transformation.getLeftRotation()).rotate(transformation.getRightRotation());
+
+        this.renderInner();
+        poseStack.popPose();
     }
 
     public enum ObjectType {
@@ -188,6 +233,7 @@ public abstract class RenderObject {
         // Minecraft
         BLOCKS,
         ITEMS,
+        ICONS,
         OVERLAYS,
         MODELS;
 

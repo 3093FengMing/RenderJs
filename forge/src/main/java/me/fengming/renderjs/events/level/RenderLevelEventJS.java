@@ -59,7 +59,7 @@ public class RenderLevelEventJS extends RenderEventJS {
     }
 
     public void renderInWorldXyz(String id, float x, float y, float z) {
-        super.renderInWorldCameraXyz(id, this.camera, x, y, z);
+        super.renderInWorldCameraXYZ(id, this.camera, x, y, z);
     }
 
     @Info("""

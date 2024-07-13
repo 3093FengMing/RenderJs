@@ -9,15 +9,13 @@ import me.fengming.renderjs.core.RenderObject;
 import org.joml.Matrix4f;
 
 @RemapPrefixForJS("rjs$")
-public class Triangles extends RenderObject {
-    public Triangles(float[] vertices, float r, float g, float b, float a, String texLoc, ObjectType type) {
-        super(vertices, r, g, b, a, texLoc, type);
+public class Triangles extends Draw {
+    public Triangles(float[] vertices, ObjectType type) {
+        super(vertices, type);
     }
 
     @Override
-    public void rjs$render() {
-        prepare();
-
+    public void renderInner() {
         Matrix4f matrix4f = poseStack.last().pose();
         Tesselator tesselator = RenderSystem.renderThreadTesselator();
         BufferBuilder builder = tesselator.getBuilder();
@@ -54,6 +52,5 @@ public class Triangles extends RenderObject {
         }
 
         tesselator.end();
-        poseStack.popPose();
     }
 }
