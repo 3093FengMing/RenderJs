@@ -2,12 +2,14 @@ package me.fengming.renderjs.core.objects;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
+import com.mojang.math.Axis;
 import dev.latvian.mods.kubejs.util.ConsoleJS;
 import dev.latvian.mods.rhino.util.RemapPrefixForJS;
 import me.fengming.renderjs.core.RenderObject;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 import org.joml.Matrix4f;
 
 @RemapPrefixForJS("rjs$")
@@ -19,6 +21,8 @@ public class IconsDisplay extends RenderObject {
     protected float height;
     protected float u = 0;
     protected float v = 0;
+    protected boolean rotateY = true;
+    protected boolean proportion = true;
 
     public IconsDisplay(float[] vertices, ObjectType type) {
         super(vertices, type);
@@ -50,6 +54,14 @@ public class IconsDisplay extends RenderObject {
 
     public void rjs$setV(float v) {
         this.v = v;
+    }
+
+    public void rjs$setRotateY(boolean rotateY) {
+        this.rotateY = rotateY;
+    }
+
+    public void rjs$setProportion(boolean proportion) {
+        this.proportion = proportion;
     }
 
     @Override
@@ -88,30 +100,39 @@ public class IconsDisplay extends RenderObject {
         if (object.contains("v")) {
             this.rjs$setV(object.getFloat("v"));
         }
+        if (object.contains("rotate_y")) {
+            this.rjs$setRotateY(object.getBoolean("rotate_y"));
+        }
+        if (object.contains("proportion")) {
+            this.rjs$setProportion(object.getBoolean("proportion"));
+        }
     }
 
     @Override
     public void rjs$render() {
         RenderSystem.setShaderTexture(0, location);
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        // RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 
         super.rjs$render();
     }
 
     @Override
     public void renderInner() {
-        float widthProportion = 1.0F / textureWidth;
-        float heightProportion = 1.0F / textureHeight;
+        float widthProportion = proportion ? 1.0F / textureWidth : textureWidth;
+        float heightProportion = proportion ? 1.0F / textureHeight : textureHeight;
         Matrix4f matrix4f = poseStack.last().pose();
+        if (rotateY) {
+            matrix4f.rotate(Axis.ZP.rotation(Mth.PI));
+        }
         for (int i = 0; i < vertices.length; i += 3) {
             BufferBuilder bufferbuilder = Tesselator.getInstance().getBuilder();
             bufferbuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
-            bufferbuilder.vertex(matrix4f, vertices[i], vertices[i + 1] + height, vertices[i + 2]).uv(u * widthProportion, (v + height) * heightProportion).color(0.0F, 0.0F, 0.0F, 1.0F).endVertex();
-            bufferbuilder.vertex(matrix4f, (vertices[i] + width), (vertices[i + 1] + height), vertices[i + 2]).uv((u + width) * widthProportion, (v + height) * heightProportion).color(0.0F, 0.0F, 0.0F, 1.0F).endVertex();
-            bufferbuilder.vertex(matrix4f, (vertices[i] + width), vertices[i + 1], vertices[i + 2]).uv((u + width) * widthProportion, v * heightProportion).color(0.0F, 0.0F, 0.0F, 1.0F).endVertex();
-            bufferbuilder.vertex(matrix4f, vertices[i], vertices[i + 1], vertices[i + 2]).uv(u * widthProportion, v * heightProportion).color(0.0F, 0.0F, 0.0F, 1.0F).endVertex();
-            BufferUploader.draw(bufferbuilder.end());
+            bufferbuilder.vertex(matrix4f, vertices[i], vertices[i + 1] + height, vertices[i + 2]).uv(u * widthProportion, (v + height) * heightProportion).endVertex();
+            bufferbuilder.vertex(matrix4f, (vertices[i] + width), (vertices[i + 1] + height), vertices[i + 2]).uv((u + width) * widthProportion, (v + height) * heightProportion).endVertex();
+            bufferbuilder.vertex(matrix4f, (vertices[i] + width), vertices[i + 1], vertices[i + 2]).uv((u + width) * widthProportion, v * heightProportion).endVertex();
+            bufferbuilder.vertex(matrix4f, vertices[i], vertices[i + 1], vertices[i + 2]).uv(u * widthProportion, v * heightProportion).endVertex();
+            BufferUploader.drawWithShader(bufferbuilder.end());
         }
     }
 }

@@ -6,6 +6,8 @@ import me.fengming.renderjs.events.RenderEventJS;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraftforge.client.event.RenderLivingEvent;
+import net.minecraftforge.client.event.RenderPlayerEvent;
 
 @Info("""
         Invoked on rendering a living entity.
@@ -18,13 +20,22 @@ public class RenderEntityEventJS extends RenderEventJS {
     public float partialTick;
     public int packedLight;
 
-    protected RenderEntityEventJS(LivingEntity entity, LivingEntityRenderer<?, ?> renderer, float partialTick, PoseStack poseStack, MultiBufferSource multiBufferSource, int packedLight) {
-        this.entity = entity;
-        this.renderer = renderer;
-        this.partialTick = partialTick;
-        this.poseStack = poseStack;
-        this.multiBufferSource = multiBufferSource;
-        this.packedLight = packedLight;
+    protected RenderEntityEventJS(RenderPlayerEvent event) {
+        this.entity = event.getEntity();
+        this.renderer = event.getRenderer();
+        this.partialTick = event.getPartialTick();
+        this.poseStack = event.getPoseStack();
+        this.multiBufferSource = event.getMultiBufferSource();
+        this.packedLight = event.getPackedLight();
+    }
+
+    protected RenderEntityEventJS(RenderLivingEvent<?, ?> event) {
+        this.entity = event.getEntity();
+        this.renderer = event.getRenderer();
+        this.partialTick = event.getPartialTick();
+        this.poseStack = event.getPoseStack();
+        this.multiBufferSource = event.getMultiBufferSource();
+        this.packedLight = event.getPackedLight();
     }
 
     public PoseStack getPoseStack() {
@@ -55,8 +66,12 @@ public class RenderEntityEventJS extends RenderEventJS {
             Invoked after rendering a entity.
             """)
     public static class After extends RenderEntityEventJS {
-        public After(LivingEntity entity, LivingEntityRenderer<?, ?> renderer, float partialTick, PoseStack poseStack, MultiBufferSource multiBufferSource, int packedLight) {
-            super(entity, renderer, partialTick, poseStack, multiBufferSource, packedLight);
+        public After(RenderPlayerEvent event) {
+            super(event);
+        }
+
+        public After(RenderLivingEvent<?, ?> event) {
+            super(event);
         }
     }
 
@@ -64,8 +79,12 @@ public class RenderEntityEventJS extends RenderEventJS {
             Invoked before rendering a entity.
             """)
     public static class Before extends RenderEntityEventJS {
-        public Before(LivingEntity entity, LivingEntityRenderer<?, ?> renderer, float partialTick, PoseStack poseStack, MultiBufferSource multiBufferSource, int packedLight) {
-            super(entity, renderer, partialTick, poseStack, multiBufferSource, packedLight);
+        public Before(RenderPlayerEvent event) {
+            super(event);
+        }
+
+        public Before(RenderLivingEvent<?, ?> event) {
+            super(event);
         }
     }
 }

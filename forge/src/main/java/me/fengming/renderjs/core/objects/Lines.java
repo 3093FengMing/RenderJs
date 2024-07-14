@@ -31,7 +31,7 @@ public class Lines extends Draw {
 
     @Override
     public void renderInner() {
-        Matrix4f matrix4f = poseStack.last().pose();
+        Matrix4f matrix4f = poseStack.last().pose().normal();
         Tesselator tesselator = RenderSystem.renderThreadTesselator();
         BufferBuilder builder = tesselator.getBuilder();
 

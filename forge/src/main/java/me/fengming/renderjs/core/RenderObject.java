@@ -40,6 +40,8 @@ public abstract class RenderObject {
     private int innerOffsetsLength = 0;
     private final float[] offsets = new float[300];
     private int offsetsLength = 0;
+    private final float[] scales = new float[300];
+    private int scalesLength = 0;
 
     public RenderObject(float[] vertices, ObjectType type) {
         this.vertices = vertices;
@@ -104,6 +106,8 @@ public abstract class RenderObject {
             case BLOCKS -> renderObject = new BlocksDisplay(vertices, objectType);
             case ITEMS -> renderObject = new ItemsDisplay(vertices, objectType);
             case ICONS -> renderObject = new IconsDisplay(vertices, objectType);
+            case OVERLAYS -> renderObject = new OverlaysDisplay(vertices, objectType);
+            case MODELS -> renderObject = new ModelsDisplay(vertices, objectType);
         }
         renderObject.load(object);
 
@@ -146,7 +150,7 @@ public abstract class RenderObject {
             Offset vertices by given values.
             """,
             params = {
-                    @Param(name = "i", value = "The specified offset index starts from 0. If multiple offsets are to be applied, the index value is increased sequentially. Max to 100."),
+                    @Param(name = "i", value = "The specified offset index starts from 0. If multiple offsets are to be applied, the index value is increased sequentially. Max to 99."),
                     @Param(name = "x", value = "Offset in the x-direction."),
                     @Param(name = "y", value = "Offset in the y-direction."),
                     @Param(name = "z", value = "Offset in the z-direction.")
@@ -159,6 +163,25 @@ public abstract class RenderObject {
         offsets[i + 2] = z;
         offsetsLength = i + 3;
     }
+
+    @Info(value = """
+            Scale vertices by given values.
+            """,
+            params = {
+                    @Param(name = "i", value = "The specified scale index starts from 0. If multiple scales are to be applied, the index value is increased sequentially. Max to 99."),
+                    @Param(name = "x", value = "Scale in the x-direction."),
+                    @Param(name = "y", value = "Scale in the y-direction."),
+                    @Param(name = "z", value = "Scale in the z-direction.")
+            }
+    )
+    public void rjs$addScale(int i, float x, float y, float z) {
+        i *= 3;
+        scales[i] = x;
+        scales[i + 1] = y;
+        scales[i + 2] = z;
+        scalesLength = i + 3;
+    }
+
 
     public void addInnerOffsets(int i, float x, float y, float z) {
         i *= 3;
@@ -204,6 +227,10 @@ public abstract class RenderObject {
         }
         for (int i = 0; i < offsetsLength; i += 3) {
             poseStack.translate(offsets[i], offsets[i + 1], offsets[i + 2]);
+        }
+
+        for (int i = 0; i < scales.length; i += 3) {
+            poseStack.scale(scales[i], scales[i + 1], scales[i + 2]);
         }
 
         switch (billboard) {
