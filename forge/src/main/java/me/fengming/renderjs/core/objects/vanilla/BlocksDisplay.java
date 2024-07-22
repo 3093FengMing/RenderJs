@@ -1,4 +1,4 @@
-package me.fengming.renderjs.core.objects;
+package me.fengming.renderjs.core.objects.vanilla;
 
 import dev.latvian.mods.kubejs.util.ConsoleJS;
 import dev.latvian.mods.rhino.util.RemapPrefixForJS;
@@ -18,8 +18,8 @@ public class BlocksDisplay extends RenderObject {
     protected int blockLight = 15;
     protected RenderType renderType = null;
 
-    public BlocksDisplay(float[] vertices, ObjectType type) {
-        super(vertices, type);
+    public BlocksDisplay(ObjectType type) {
+        super(type);
     }
 
     public void rjs$setBlockState(BlockState blockState) {

@@ -1,4 +1,4 @@
-package me.fengming.renderjs.core.objects;
+package me.fengming.renderjs.core.objects.draw;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import dev.latvian.mods.kubejs.util.ConsoleJS;
@@ -16,8 +16,8 @@ public abstract class Draw extends RenderObject {
     protected ResourceLocation textureLocation = null;
     protected boolean texture = false;
 
-    public Draw(float[] vertices, ObjectType type) {
-        super(vertices, type);
+    public Draw(ObjectType type) {
+        super(type);
     }
 
     @Override

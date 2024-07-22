@@ -8,7 +8,13 @@ import dev.latvian.mods.kubejs.typings.Info;
 import dev.latvian.mods.kubejs.typings.Param;
 import dev.latvian.mods.kubejs.util.ConsoleJS;
 import dev.latvian.mods.rhino.util.RemapPrefixForJS;
-import me.fengming.renderjs.core.objects.*;
+import me.fengming.renderjs.core.objects.draw.Lines;
+import me.fengming.renderjs.core.objects.draw.Quads;
+import me.fengming.renderjs.core.objects.draw.Triangles;
+import me.fengming.renderjs.core.objects.vanilla.BlocksDisplay;
+import me.fengming.renderjs.core.objects.vanilla.IconsDisplay;
+import me.fengming.renderjs.core.objects.vanilla.ItemsDisplay;
+import me.fengming.renderjs.core.objects.vanilla.ModelsDisplay;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.CompoundTag;
@@ -36,15 +42,16 @@ public abstract class RenderObject {
     protected Display.BillboardConstraints billboard = Display.BillboardConstraints.FIXED;
     protected Transformation transformation = new Transformation(null);
 
-    private final float[] innerOffsets = new float[300];
-    private int innerOffsetsLength = 0;
-    private final float[] offsets = new float[300];
-    private int offsetsLength = 0;
-    private final float[] scales = new float[300];
-    private int scalesLength = 0;
+    protected final float[] innerOffsets = new float[300];
+    protected int innerOffsetsLength = 0;
+    protected final float[] offsets = new float[300];
+    protected int offsetsLength = 0;
+    protected final float[] scales = new float[300];
+    protected int scalesLength = 0;
+    protected float[] innerScale = new float[3];
 
-    public RenderObject(float[] vertices, ObjectType type) {
-        this.vertices = vertices;
+
+    public RenderObject(ObjectType type) {
         this.type = type;
     }
 
@@ -98,19 +105,28 @@ public abstract class RenderObject {
             return null;
         }
 
+        float[] scale = new float[3];
+        if (object.contains("scale")) {
+            ListTag scaleList = object.getList("scale", 6);
+            for (int i = 0; i < 3; i++) {
+                scale[i] = (float) scaleList.getDouble(i);
+            }
+        }
+
         RenderObject renderObject = null;
         switch (objectType) {
-            case LINES, LINE_STRIP -> renderObject = new Lines(vertices, objectType);
-            case TRIANGLES, TRIANGLE_STRIP, TRIANGLE_FAN -> renderObject = new Triangles(vertices, objectType);
-            case QUADS, RECTANGLES -> renderObject = new Quads(vertices, objectType);
-            case BLOCKS -> renderObject = new BlocksDisplay(vertices, objectType);
-            case ITEMS -> renderObject = new ItemsDisplay(vertices, objectType);
-            case ICONS -> renderObject = new IconsDisplay(vertices, objectType);
-            case OVERLAYS -> renderObject = new OverlaysDisplay(vertices, objectType);
-            case MODELS -> renderObject = new ModelsDisplay(vertices, objectType);
+            case LINES, LINE_STRIP -> renderObject = new Lines(objectType);
+            case TRIANGLES, TRIANGLE_STRIP, TRIANGLE_FAN -> renderObject = new Triangles(objectType);
+            case QUADS, RECTANGLES -> renderObject = new Quads(objectType);
+            case BLOCKS -> renderObject = new BlocksDisplay(objectType);
+            case ITEMS -> renderObject = new ItemsDisplay(objectType);
+            case ICONS -> renderObject = new IconsDisplay(objectType);
+            case MODELS -> renderObject = new ModelsDisplay(objectType);
         }
         renderObject.load(object);
 
+        renderObject.vertices = vertices;
+        renderObject.innerScale = scale;
         return renderObject;
     }
 
@@ -198,13 +214,13 @@ public abstract class RenderObject {
         return this.type;
     }
 
-    public abstract void renderInner();
+    protected abstract void renderInner();
 
     @Info("""
-            Render this object.
+            Render this object. Before that, make sure PoseStack has been set.
             """)
     public void rjs$render() {
-        if (broken) return;
+        if (broken || poseStack == null) return;
 
         if (enableBlend) {
             RenderSystem.enableBlend();
@@ -229,7 +245,8 @@ public abstract class RenderObject {
             poseStack.translate(offsets[i], offsets[i + 1], offsets[i + 2]);
         }
 
-        for (int i = 0; i < scales.length; i += 3) {
+        poseStack.scale(innerScale[0], innerScale[1], innerScale[2]);
+        for (int i = 0; i < scalesLength; i += 3) {
             poseStack.scale(scales[i], scales[i + 1], scales[i + 2]);
         }
 
@@ -261,7 +278,6 @@ public abstract class RenderObject {
         BLOCKS,
         ITEMS,
         ICONS,
-        OVERLAYS,
         MODELS;
 
         private final VertexFormat.Mode[] modes = {VertexFormat.Mode.LINES, VertexFormat.Mode.LINE_STRIP, VertexFormat.Mode.TRIANGLES, VertexFormat.Mode.TRIANGLE_STRIP, VertexFormat.Mode.TRIANGLE_FAN, VertexFormat.Mode.QUADS};

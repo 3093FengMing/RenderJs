@@ -1,18 +1,17 @@
 package me.fengming.renderjs;
 
-import me.fengming.renderjs.events.RenderEventJS;
+import dev.architectury.event.events.client.ClientPlayerEvent;
+import me.fengming.renderjs.events.RegisterCustomEventJS;
 import me.fengming.renderjs.events.RenderJsEvents;
-import me.fengming.renderjs.events.level.RenderEntityEventJS;
+import me.fengming.renderjs.events.entity.RenderEntityEventJS;
+import me.fengming.renderjs.events.entity.RenderPlayerEventJS;
+import me.fengming.renderjs.events.gui.RenderHudEventJS;
+import me.fengming.renderjs.events.gui.RenderTooltipEventJS;
 import me.fengming.renderjs.events.level.RenderLevelEventJS;
-import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.RenderHighlightEvent;
-import net.minecraftforge.client.event.RenderLevelStageEvent;
-import net.minecraftforge.client.event.RenderLivingEvent;
-import net.minecraftforge.client.event.RenderPlayerEvent;
+import net.minecraftforge.client.event.*;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 
 @Mod(RenderJs.MOD_ID)
 public class RenderJs {
@@ -22,26 +21,64 @@ public class RenderJs {
 
     }
 
-    @Mod.EventBusSubscriber(modid = RenderJs.MOD_ID, value = Dist.CLIENT)
+    @Mod.EventBusSubscriber(modid = MOD_ID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD)
+    public static class ClientModEvents {
+        @SubscribeEvent
+        public static void registerOverlays(RegisterGuiOverlaysEvent e) {
+            // It should be called before overlay is registered
+            // But I could not find a good place for it to do that
+            // So it is simply and rudely placed here
+            RenderJsEvents.REGISTER_OBJECT.post(new RegisterCustomEventJS.Object());
+
+            RenderJsEvents.REGISTER_OVERLAY.post(new RegisterCustomEventJS.Overlay(e));
+        }
+    }
+
+    @Mod.EventBusSubscriber(modid = RenderJs.MOD_ID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.FORGE)
     public static class ClientForgeEvents {
         @SubscribeEvent
-        public static void onRenderEntityBefore(RenderLivingEvent.Pre<?, ?> e) {
-            RenderJsEvents.BEFORE_RENDER_ENTITY.post(new RenderEntityEventJS.Before(e));
+        public static void onRenderHudAfter(RenderGuiEvent e) {
+            if (e instanceof RenderGuiEvent.Post) {
+                RenderJsEvents.AFTER_RENDER_HUD.post(new RenderHudEventJS(e));
+            } else if (!RenderJsEvents.BEFORE_RENDER_HUD.post(new RenderHudEventJS(e)).pass()) {
+                e.setCanceled(true);
+            }
         }
 
         @SubscribeEvent
-        public static void onRenderEntityAfter(RenderLivingEvent.Post<?, ?> e) {
-            RenderJsEvents.AFTER_RENDER_ENTITY.post(new RenderEntityEventJS.After(e));
+        public static void onGatherTooltipComponents(RenderTooltipEvent.GatherComponents e) {
+            if (!RenderJsEvents.GATHER_TOOLTIP_COMPONENTS.post(new RenderTooltipEventJS.GatherComponents(e)).pass()) {
+                e.setCanceled(true);
+            }
         }
 
         @SubscribeEvent
-        public static void onRenderPlayerBefore(RenderPlayerEvent.Pre e) {
-            RenderJsEvents.BEFORE_RENDER_PLAYER.post(new RenderEntityEventJS.Before(e));
+        public static void onRenderTooltip(RenderTooltipEvent e) {
+            if (e instanceof RenderTooltipEvent.Pre ie) {
+                if (!RenderJsEvents.BEFORE_RENDER_TOOLTIP.post(new RenderTooltipEventJS.Before(ie)).pass()) {
+                    e.setCanceled(true);
+                }
+            } else if (e instanceof RenderTooltipEvent.Color ie) {
+                RenderJsEvents.RENDER_TOOLTIP_COLOR.post(new RenderTooltipEventJS.Color(ie));
+            }
         }
 
         @SubscribeEvent
-        public static void onRenderPlayerAfter(RenderPlayerEvent.Post e) {
-            RenderJsEvents.AFTER_RENDER_PLAYER.post(new RenderEntityEventJS.After(e));
+        public static void onRenderEntity(RenderLivingEvent e) {
+            if (e instanceof RenderLivingEvent.Post) {
+                RenderJsEvents.AFTER_RENDER_ENTITY.post(new RenderEntityEventJS(e));
+            } else if (!RenderJsEvents.BEFORE_RENDER_ENTITY.post(new RenderEntityEventJS(e)).pass()) {
+                e.setCanceled(true);
+            }
+        }
+
+        @SubscribeEvent
+        public static void onRenderPlayer(RenderPlayerEvent e) {
+            if (e instanceof RenderPlayerEvent.Post) {
+                RenderJsEvents.AFTER_RENDER_PLAYER.post(new RenderPlayerEventJS(e));
+            } else if (!RenderJsEvents.BEFORE_RENDER_PLAYER.post(new RenderPlayerEventJS(e)).pass()) {
+                e.setCanceled(true);
+            }
         }
 
         @SubscribeEvent
@@ -79,14 +116,6 @@ public class RenderJs {
             if (e.getStage() == RenderLevelStageEvent.Stage.AFTER_CUTOUT_MIPPED_BLOCKS_BLOCKS) {
                 RenderJsEvents.AFTER_RENDER_CUTOUT_MIPPED.post(new RenderLevelEventJS(e));
             }
-        }
-    }
-
-    @Mod.EventBusSubscriber(modid = RenderJs.MOD_ID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD)
-    public static class ClientModEvents {
-        @SubscribeEvent
-        public static void onSetup(FMLClientSetupEvent event) {
-
         }
     }
 }

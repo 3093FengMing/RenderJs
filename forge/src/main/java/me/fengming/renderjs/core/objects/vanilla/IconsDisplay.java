@@ -1,4 +1,4 @@
-package me.fengming.renderjs.core.objects;
+package me.fengming.renderjs.core.objects.vanilla;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
@@ -24,8 +24,8 @@ public class IconsDisplay extends RenderObject {
     protected boolean rotateY = true;
     protected boolean proportion = true;
 
-    public IconsDisplay(float[] vertices, ObjectType type) {
-        super(vertices, type);
+    public IconsDisplay(ObjectType type) {
+        super(type);
     }
 
     public void rjs$setLocation(ResourceLocation location) {

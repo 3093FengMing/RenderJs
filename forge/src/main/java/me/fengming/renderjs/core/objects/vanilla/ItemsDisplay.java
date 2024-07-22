@@ -1,4 +1,4 @@
-package me.fengming.renderjs.core.objects;
+package me.fengming.renderjs.core.objects.vanilla;
 
 import dev.latvian.mods.kubejs.util.ConsoleJS;
 import dev.latvian.mods.rhino.util.RemapPrefixForJS;
@@ -16,8 +16,8 @@ public class ItemsDisplay extends RenderObject {
     protected boolean leftHand = false;
     protected int light = 15728880;
 
-    public ItemsDisplay(float[] vertices, ObjectType type) {
-        super(vertices, type);
+    public ItemsDisplay(ObjectType type) {
+        super(type);
     }
 
     public void rjs$setItem(ItemStack item) {

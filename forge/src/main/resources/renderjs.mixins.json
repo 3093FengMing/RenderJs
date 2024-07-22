@@ -1,11 +1,12 @@
 {
   "required": true,
   "minVersion": "0.8",
-  "package": "me.fengming.renderjs.forge.mixin",
+  "package": "me.fengming.renderjs.mixin",
   "compatibilityLevel": "JAVA_17",
   "mixins": [
   ],
   "client": [
+    "KubeJSClientMixin"
   ],
   "injectors": {
     "defaultRequire": 1

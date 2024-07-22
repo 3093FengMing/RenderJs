@@ -1,4 +1,4 @@
-package me.fengming.renderjs.events.level;
+package me.fengming.renderjs.events.entity;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import dev.latvian.mods.kubejs.typings.Info;
@@ -7,7 +7,6 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraftforge.client.event.RenderLivingEvent;
-import net.minecraftforge.client.event.RenderPlayerEvent;
 
 @Info("""
         Invoked on rendering a living entity.
@@ -20,16 +19,7 @@ public class RenderEntityEventJS extends RenderEventJS {
     public float partialTick;
     public int packedLight;
 
-    protected RenderEntityEventJS(RenderPlayerEvent event) {
-        this.entity = event.getEntity();
-        this.renderer = event.getRenderer();
-        this.partialTick = event.getPartialTick();
-        this.poseStack = event.getPoseStack();
-        this.multiBufferSource = event.getMultiBufferSource();
-        this.packedLight = event.getPackedLight();
-    }
-
-    protected RenderEntityEventJS(RenderLivingEvent<?, ?> event) {
+    public RenderEntityEventJS(RenderLivingEvent<?, ?> event) {
         this.entity = event.getEntity();
         this.renderer = event.getRenderer();
         this.partialTick = event.getPartialTick();
@@ -60,31 +50,5 @@ public class RenderEntityEventJS extends RenderEventJS {
 
     public int getPackedLight() {
         return packedLight;
-    }
-
-    @Info("""
-            Invoked after rendering a entity.
-            """)
-    public static class After extends RenderEntityEventJS {
-        public After(RenderPlayerEvent event) {
-            super(event);
-        }
-
-        public After(RenderLivingEvent<?, ?> event) {
-            super(event);
-        }
-    }
-
-    @Info("""
-            Invoked before rendering a entity.
-            """)
-    public static class Before extends RenderEntityEventJS {
-        public Before(RenderPlayerEvent event) {
-            super(event);
-        }
-
-        public Before(RenderLivingEvent<?, ?> event) {
-            super(event);
-        }
     }
 }

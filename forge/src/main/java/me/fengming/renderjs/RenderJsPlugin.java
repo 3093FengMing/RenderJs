@@ -25,6 +25,7 @@ public class RenderJsPlugin extends KubeJSPlugin {
 
     @Override
     public void registerEvents() {
+        RenderJsEvents.GROUP.register();
         RenderJsEvents.GROUP_LEVEL.register();
         RenderJsEvents.GROUP_ENTITY.register();
     }
